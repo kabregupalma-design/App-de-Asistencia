@@ -8,6 +8,32 @@ import os
 st.set_page_config(page_title="Control de Asistencia", page_icon="📌")
 st.title("⏰ Control de Asistencia")
 
+tiempo_actual = datetime.now()
+fecha_hora_texto = tiempo_actual.strftime("%d/%m/%Y - %I:%M:%S %p")
+st.markdown(f"### 📅 **Fecha y Hora:** `{fecha_hora_texto}`")
+st.divider()
+
+col1, col2 = st.columns(2)
+tiendas = ["Centro 1001", "Centro 701", "Centro 520", "Centro 342", "Centro 333", "Torre 605", "Torre 603"]
+usuarios = ["Ylda", "Elizabeth", "Consuelo", "Tonny", "Jenny", "Vicky"]
+
+with col1:
+    tienda_sel = st.selectbox(
+        "🏪 Selecciona la Tienda:", tiendas
+    )
+    
+with col2:
+    usuario_sel = st.selectbox(
+        "👤 Selecciona el Usuario:", usuarios
+    )
+    
+    
+tipo_registro = st.radio(
+    "📌 Tipo de Registro:", ["Entrada", "Salida"], horizontal=True
+)
+
+st.divider()
+
 TIENDAS = {
     #"Torre 605": {"lat": -12.046374, "lon": -77.042793, "radio_m": 50},
     #"Torre 603": {"lat": -12.075123, "lon": -77.081456, "radio_m": 50},
@@ -37,23 +63,25 @@ lon_val = st.query_params.get("lon") if "lon" in st.query_params else None
 if not lat_val or not lon_val:
     st.info("📍 Para continuar, activa tu ubicación GPS.")
     html_geo = """
+    <button onclick="getGPS()" style="background-color: #2563EB; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%;">
+        📍 Capturar mi ubicación GPS
+    </button>
     <script>
-function getGPS() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-            // El cambio clave está en usar 'window.top' para recargar la ventana principal
-            const url = new URL(window.top.location.href);
-            url.searchParams.set('lat', position.coords.latitude);
-            url.searchParams.set('lon', position.coords.longitude);
-            window.top.location.href = url.href;
-        }, function(err) {
-            alert('Por favor autoriza el acceso al GPS en tu navegador.');
-        }, { enableHighAccuracy: true });
-    } else {
-        alert('Tu navegador no soporta geolocalización.');
+    function getGPS() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                const url = new URL(window.top.location.href);
+                url.searchParams.set('lat', position.coords.latitude);
+                url.searchParams.set('lon', position.coords.longitude);
+                window.top.location.href = url.href;
+            }, function(err) {
+                alert('Por favor autoriza el acceso al GPS en tu navegador.');
+            }, { enableHighAccuracy: true });
+        } else {
+            alert('Tu navegador no soporta geolocalización.');
+        }
     }
-}
-</script>
+    </script>
     """
     st.components.v1.html(html_geo, height=80)
     st.stop()
@@ -102,4 +130,3 @@ if st.button("🚀 Registrar Asistencia"):
         registro.to_csv("asistencia.csv", mode='a', header=not os.path.exists("asistencia.csv"), index=False)
 
         st.success(f"✅ Registro completado exitosamente a las {hora}.")
-        
