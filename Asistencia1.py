@@ -75,6 +75,10 @@ if loc and 'coords' in loc:
 else:
     st.info("🌐 Obteniendo señal GPS... Si tu navegador solicita permiso, presiona 'Permitir'.")
 
+
+# Reemplaza con el enlace exacto a tu Google Sheet
+SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1afsZQzm-6XfDnEs0VBsWpeDs4pXMVyAk_O_T-4x-ZfQ/edit?usp=sharing"
+
 # Botón de envío
 if st.button("📩 Enviar Registro", type="primary", use_container_width=True):
     if not lat_val or not lon_val:
@@ -84,7 +88,7 @@ if st.button("📩 Enviar Registro", type="primary", use_container_width=True):
     else:
         try:
             ahora = datetime.now(zona_horaria)
-            datos_existentes = conn.read(ttl=0)
+            datos_existentes = conn.read(spreadsheet=SPREADSHEET_URL, ttl=0)
 
             nuevo_registro = pd.DataFrame(
                 [
@@ -101,7 +105,7 @@ if st.button("📩 Enviar Registro", type="primary", use_container_width=True):
             )
 
             df_actualizado = pd.concat([datos_existentes, nuevo_registro], ignore_index=True)
-            conn.update(data=df_actualizado)
+            conn.update(spreadsheet=SPREADSHEET_URL, data=df_actualizado)
 
             st.success(f"✅ ¡Asistencia de {usuario_sel} ({tipo_registro}) registrada en Google Sheets!")
             st.balloons()
