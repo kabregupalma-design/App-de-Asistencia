@@ -4,6 +4,10 @@ import pandas as pd
 from geopy.distance import geodesic
 from PIL import Image, ImageDraw
 import os  
+from streamlit_gsheets import GSheetsConnection
+
+# 1. Configurar conexión con Google Sheets
+conn = st.connection("gsheets", type=GSheetsConnection)
 
 st.set_page_config(page_title="Control de Asistencia", page_icon="📌")
 st.title("⏰ Control de Asistencia")
@@ -34,7 +38,8 @@ tipo_registro = st.radio(
 
 st.divider()
 
-TIENDAS = {
+# Solicitar y capturar la ubicación GPS del navegador
+TIENDAS_GEO = {
     #"Torre 605": {"lat": -12.046374, "lon": -77.042793, "radio_m": 50},
     #"Torre 603": {"lat": -12.075123, "lon": -77.081456, "radio_m": 50},
     "Centro 1001": {"lat": -12.065420573231364, "lon": -77.01356266011081, "radio_m": 3}
@@ -44,89 +49,59 @@ TIENDAS = {
     #"Centro 333": {"lat": -12.046374, "lon": -77.042793, "radio_m": 50}
 }
 
-USUARIOS = {
-    "Ylda",
-    "Elizabeth",
-    "Consuelo",
-    "Tonny",
-    "Jenny",
-    "Vicky"
-}
 
-
-# Solicitar y capturar la ubicación GPS del navegador
-#query_params = st.query_params #conectar el GPS del navegador con tu código de Python
-#user_lat, user_lon = query_params.get("lat"), query_params.get("lon")
+query_params = st.query_params #conectar el GPS del navegador con tu código de Python
 lat_val = st.query_params.get("lat") if "lat" in st.query_params else None
 lon_val = st.query_params.get("lon") if "lon" in st.query_params else None
 
-if not lat_val or not lon_val:
-    st.info("📍 Para continuar, activa tu ubicación GPS.")
-    html_geo = """
-    <button onclick="getGPS()" style="background-color: #2563EB; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%;">
-        📍 Capturar mi ubicación GPS
-    </button>
-    <script>
-    function getGPS() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                const url = new URL(window.top.location.href);
-                url.searchParams.set('lat', position.coords.latitude);
-                url.searchParams.set('lon', position.coords.longitude);
-                window.top.location.href = url.href;
-            }, function(err) {
-                alert('Por favor autoriza el acceso al GPS en tu navegador.');
-            }, { enableHighAccuracy: true });
-        } else {
-            alert('Tu navegador no soporta geolocalización.');
-        }
-    }
-    </script>
-    """
-    st.components.v1.html(html_geo, height=80)
-    st.stop()
+# Calcular distancia GPS en metros entre la tienda y el celular
+coords_tienda = (TIENDAS_GEO[tienda_sel]["lat"], TIENDAS_GEO[tienda_sel]["lon"])
+distancia = geodesic(coords_tienda, (lat_val, lon_val)).meters
 
-u_lat, u_lon = float(lat_val), float(lon_val)
+if distancia > TIENDAS_GEO[tienda_sel]["radio_m"]:
+    st.error(f"⛔ Estás a {distancia:.1f}m. Debes estar a menos de {TIENDAS_GEO[tienda_sel]['radio_m']}m de la tienda.")
+else:
+    # Generar fecha y hora
+    ahora = datetime.now()
+    fecha, hora = ahora.strftime("%Y-%m-%d"), ahora.strftime("%H:%M:%S")
 
-#Diseñar el formulario y la captura de foto
-usuario_sel = st.selectbox("Selecciona tu nombre", USUARIOS)
-tienda_sel = st.selectbox("Selecciona la tienda", list(TIENDAS.keys()))
-tipo_registro = st.radio("Acción", ["Entrada", "Salida Almuerzo", "Regreso Almuerzo", "Salida"], horizontal=True)
-foto_camara = st.camera_input("Toma una foto de evidencia")
-
-#Validar distancia, estampar la foto y guardar el registro
-if st.button("🚀 Registrar Asistencia"):
-    
-    #if not foto_camara:
-    #    st.error("⚠️ La foto es obligatoria para marcar.")
-    #    st.stop()
-
-    # Calcular distancia GPS en metros entre la tienda y el celular
-    coords_tienda = (TIENDAS[tienda_sel]["lat"], TIENDAS[tienda_sel]["lon"])
-    distancia = geodesic(coords_tienda, (u_lat, u_lon)).meters
-
-    if distancia > TIENDAS[tienda_sel]["radio_m"]:
-        st.error(f"⛔ Estás a {distancia:.1f}m. Debes estar a menos de {TIENDAS[tienda_sel]['radio_m']}m de la tienda.")
+#Botón de envio
+if st.button("📩 Enviar Registro", type="primary", use_container_width=True):
+    if lat_val is None or lon_val is None:
+        st.error(
+            "⚠️ No se ha detectado tu ubicación GPS. Espera a que cargue antes de enviar."
+        )
     else:
-        # Generar fecha y hora
-        ahora = datetime.now()
-        fecha, hora = ahora.strftime("%Y-%m-%d"), ahora.strftime("%H:%M:%S")
+        try:
+            # Leer los datos existentes en la hoja
+            datos_existentes = conn.read(ttl=0)
 
-        # Estampar hora sobre la imagen
-        #img = Image.open(foto_camara)
-        #draw = ImageDraw.Draw(img)
-        #draw.text((20, img.height - 40), f"{usuario_sel} | {fecha} {hora}", fill=(255, 255, 255))
+            # Crear la nueva fila con los datos ingresados
+            nuevo_registro = pd.DataFrame(
+                [
+                    {
+                        "Fecha": ahora.strftime("%d/%m/%Y"),
+                        "Hora": ahora.strftime("%H:%M:%S"),
+                        "Usuario": usuario_sel,
+                        "Tienda": tienda_sel,
+                        "Tipo": tipo_registro,
+                        "Latitud": lat_val,
+                        "Longitud": lon_val,
+                    }
+                ]
+            )
 
-        # Guardar imagen localmente
-        #os.makedirs("fotos", exist_ok=True)
-        #foto_path = f"fotos/{fecha}_{usuaria_sel}_{tipo_registro}.jpg"
-        #img.save(foto_path)
+            # Combinar datos anteriores con la nueva fila
+            df_actualizado = pd.concat(
+                [datos_existentes, nuevo_registro], ignore_index=True
+            )
 
-        # Guardar datos en archivo CSV
-        registro = pd.DataFrame([{
-            "Fecha": fecha, "Hora": hora, "Usuario": usuario_sel,
-            "Tienda": tienda_sel, "Tipo": tipo_registro             #, "Foto": foto_path
-        }])
-        registro.to_csv("asistencia.csv", mode='a', header=not os.path.exists("asistencia.csv"), index=False)
+            # Actualizar la hoja en Google Sheets
+            conn.update(data=df_actualizado)
 
-        st.success(f"✅ Registro completado exitosamente a las {hora}.")
+            st.success(
+                f"✅ ¡Asistencia de {usuario_sel} ({tipo_registro}) registrada en Google Sheets!"
+            )
+            st.balloons()
+        except Exception as e:
+            st.error(f"❌ Ocurrió un error al guardar en Google Sheets: {e}")
