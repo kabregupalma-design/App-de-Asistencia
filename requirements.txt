@@ -2,5 +2,4 @@ streamlit
 pandas
 geopy
 pillow
-streamlit-gsheets
 st-gsheets-connection
