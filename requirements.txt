@@ -4,4 +4,4 @@ geopy
 pillow
 st-gsheets-connection
 pytz
-
+streamlit-js-eval
