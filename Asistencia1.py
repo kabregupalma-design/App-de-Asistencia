@@ -48,7 +48,7 @@ st.divider()
 TIENDAS_GEO = {
     #"Torre 605": {"lat": -12.046374, "lon": -77.042793, "radio_m": 50},
     #"Torre 603": {"lat": -12.075123, "lon": -77.081456, "radio_m": 50},
-    "Centro 1001": {"lat": -12.065434, "lon": -77.013456, "radio_m": 3}
+    "Centro 1001": {"lat": -12.065335, "lon": -77.013471, "radio_m": 10}
     #"Centro 701": {"lat": -12.046374, "lon": -77.042793, "radio_m": 50},
     #"Centro 520": {"lat": -12.046374, "lon": -77.042793, "radio_m": 50},
     #"Centro 342": {"lat": -12.046374, "lon": -77.042793, "radio_m": 50},
