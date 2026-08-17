@@ -19,8 +19,8 @@ st.set_page_config(page_title="Control de Asistencia", page_icon="📌")
 st.title("⏰ Control de Asistencia")
 
 tiempo_actual = datetime.now(zona_horaria)
-fecha_hora_texto = tiempo_actual.strftime("%d/%m/%Y - %I:%M:%S %p")
-st.markdown(f"### 📅 **Fecha y Hora:** `{fecha_hora_texto}`")
+fecha_hora_texto = tiempo_actual.strftime("%d/%m/%Y   %I:%M:%S %p")
+st.markdown(f"**Fecha y Hora:** `{fecha_hora_texto}`")
 st.divider()
 
 col1, col2 = st.columns(2)
@@ -29,7 +29,7 @@ usuarios = ["Ylda", "Elizabeth", "Consuelo", "Tonny", "Jenny", "Vicky"]
 
 with col1:
     tienda_sel = st.selectbox(
-        "🏪 Selecciona la Tienda:", tiendas
+        "Selecciona la Tienda:", tiendas
     )
     
 with col2:
@@ -107,7 +107,7 @@ if st.button("📩 Enviar Registro", type="primary", use_container_width=True):
             df_actualizado = pd.concat([datos_existentes, nuevo_registro], ignore_index=True)
             conn.update(spreadsheet=SPREADSHEET_URL, data=df_actualizado)
 
-            st.success(f"✅ ¡Asistencia de {usuario_sel} ({tipo_registro}) registrada en Google Sheets!")
+            st.success(f"✅ ¡Asistencia de {usuario_sel} ({tipo_registro}) registrada!")
             st.balloons()
         except Exception as e:
-            st.error(f"❌ Ocurrió un error al guardar en Google Sheets: {e}")
+            st.error(f"❌ Ocurrió un error al guardar: {e}")
