@@ -20,7 +20,7 @@ st.title("⏰ Control de Asistencia")
 
 tiempo_actual = datetime.now(zona_horaria)
 fecha_hora_texto = tiempo_actual.strftime("%d/%m/%Y   %I:%M:%S %p")
-st.markdown(f"**Fecha y Hora:** `{fecha_hora_texto}`")
+st.markdown(f"### 📅 **Fecha y Hora:** `{fecha_hora_texto}`")
 st.divider()
 
 col1, col2 = st.columns(2)
