@@ -4,7 +4,7 @@ import pandas as pd
 from geopy.distance import geodesic
 from PIL import Image, ImageDraw
 import os  
-from streamlit_gsheets import GSheetsConnection
+from st_gsheets_connection import GSheetsConnection
 
 # 1. Configurar conexión con Google Sheets
 conn = st.connection("gsheets", type=GSheetsConnection)
